@@ -1,36 +1,44 @@
-# Python & Virtual Environments
-venv/
-.venv/
-env/
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.pytest_cache/
-.mypy_cache/
-.coverage
-htmlcov/
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+backend/venv/
+backend/env/
+backend/.venv/
+*.db
+backend/kyc_platform.db
+backend/data/
+backend/storage/
 
-# Node.js & Frontend
+# Logs
+*.log
+backend/backend.log
+backend/backend_8001.log
+frontend/frontend.log
+
+# Node / Frontend
 node_modules/
+frontend/node_modules/
 dist/
-dist-ssr/
-*.local
+frontend/dist/
 .vite/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 
-# Logs & Temporary Files
-*.log
-backend_8001.log
-frontend.log
-*.tmp
-temp/
-storage/
-uploads/
+# Environment
+.env
+backend/.env
+frontend/.env.local
+.env.*.local
 
-# OS Specific
+# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -38,17 +46,3 @@ uploads/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Databases & IDE
-*.sqlite
-*.sqlite3
-*.db
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Environment Variables
-.env
-.env.*
-!.env.example
