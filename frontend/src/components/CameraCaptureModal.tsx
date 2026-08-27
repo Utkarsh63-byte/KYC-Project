@@ -10,7 +10,9 @@ interface CameraCaptureModalProps {
 export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ docType, onCapture, onClose }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [guidance, setGuidance] = useState<string>('Hold document inside frame');
   const [qualityFeedback, setQualityFeedback] = useState<'GOOD' | 'WARNNING'>('GOOD');
@@ -173,11 +175,21 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ docType,
           )}
 
           <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <label className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium cursor-pointer border border-slate-700 flex items-center justify-center space-x-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium cursor-pointer border border-slate-700 flex items-center justify-center space-x-2"
+            >
               <Upload className="w-4 h-4 text-slate-400" />
               <span>Upload File</span>
-              <input type="file" accept="image/*,.pdf" onChange={handleFileUpload} className="hidden" />
-            </label>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,.pdf"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
 
             <button
               onClick={loadSampleDocument}
@@ -187,6 +199,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({ docType,
               <span>Use Test Sample</span>
             </button>
           </div>
+
         </div>
 
       </div>

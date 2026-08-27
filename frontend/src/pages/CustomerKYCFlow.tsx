@@ -4,7 +4,8 @@ import { CameraCaptureModal } from '../components/CameraCaptureModal';
 import { SelfieLivenessModal } from '../components/SelfieLivenessModal';
 import { kycApi } from '../services/api';
 import { KYCSessionResult } from '../types';
-import { Shield, ArrowRight, CheckCircle2, FileText, Camera, User, Download, AlertCircle, RefreshCw, Sparkles, Check } from 'lucide-react';
+import { Shield, ArrowRight, CheckCircle2, FileText, Camera, User, Download, AlertCircle, RefreshCw, Sparkles, Check, Upload } from 'lucide-react';
+
 
 const STEPS = ['Privacy Consent', 'Demographics', 'ID Document', 'OCR Verification', 'Face Liveness', 'Instant Decision'];
 
@@ -271,20 +272,48 @@ export const CustomerKYCFlow: React.FC = () => {
               <Camera className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Capture your {docType}</h3>
-              <p className="text-xs text-slate-400 mt-1">Our real-time OpenCV engine will check image blur, glare, and resolution</p>
+              <h3 className="text-base font-bold text-white">Capture or Upload your {docType}</h3>
+              <p className="text-xs text-slate-400 mt-1">Our in-browser neural OCR engine will scan and extract your details directly from image pixels</p>
             </div>
 
-            <button
-              onClick={() => setShowDocCamera(true)}
-              className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold text-sm inline-flex items-center space-x-2 shadow-xl shadow-sky-500/25 transition-all transform hover:-translate-y-0.5"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Launch Live Camera Scanner</span>
-            </button>
+            {loading && (
+              <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center space-x-3 text-sky-300 text-xs">
+                <RefreshCw className="w-4 h-4 animate-spin text-sky-400" />
+                <span className="font-bold">Running Neural OCR Engine on document... Please wait a few seconds</span>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDocCamera(true)}
+                disabled={loading}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold text-sm inline-flex items-center justify-center space-x-2 shadow-xl shadow-sky-500/25 transition-all transform hover:-translate-y-0.5"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Launch Live Camera Scanner</span>
+              </button>
+
+              <label className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-sm border border-slate-700 inline-flex items-center justify-center space-x-2 cursor-pointer shadow-lg transition-all">
+                <Upload className="w-4 h-4 text-sky-400" />
+                <span>Upload Document File</span>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  disabled={loading}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleDocCapture(e.target.files[0]);
+                    }
+                  }}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
         </div>
       )}
+
 
       {/* STEP 4: REAL OCR EXTRACTION CONFIRMATION */}
       {currentStep === 4 && session && (
