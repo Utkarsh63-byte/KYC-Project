@@ -88,11 +88,12 @@ export const CustomerKYCFlow: React.FC = () => {
     const curName = docFields.find((f) => f.fieldName === 'fullName')?.value;
     const curDob = docFields.find((f) => f.fieldName === 'dob')?.value;
 
-    setEditDocNumber(curNum && curNum !== 'NOT_DETECTED' ? curNum : docType === 'PAN' ? 'ABCPS1234K' : '5489 3210 7654');
-    setEditDocName(curName && curName !== 'NOT_DETECTED' ? curName : fullName.toUpperCase() || 'AMAN');
-    setEditDocDob(curDob && curDob !== 'NOT_DETECTED' ? curDob : dob || '21/12/2003');
+    setEditDocNumber(curNum && curNum !== 'NOT_DETECTED' ? curNum : '');
+    setEditDocName(curName && curName !== 'NOT_DETECTED' ? curName : fullName.toUpperCase());
+    setEditDocDob(curDob && curDob !== 'NOT_DETECTED' ? curDob : dob);
     setShowEditDocModal(true);
   };
+
 
   const handleSaveEditedDoc = () => {
     if (!session || !session.documents[0]) return;
@@ -551,9 +552,10 @@ export const CustomerKYCFlow: React.FC = () => {
                       type="text"
                       value={editDocNumber}
                       onChange={(e) => setEditDocNumber(e.target.value)}
-                      placeholder={docType === 'PAN' ? 'e.g. ABCPS1234K' : 'e.g. 5489 3210 7654'}
+                      placeholder={docType === 'PAN' ? 'Enter 10-character PAN (e.g. ABCDE1234F)' : 'Enter 12-digit Aadhaar (e.g. 1234 5678 9012)'}
                       className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-sky-500 focus:outline-none"
                     />
+
                   </div>
 
                   <div>

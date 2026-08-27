@@ -94,11 +94,7 @@ export const kycApi = {
       return res.data;
     } catch (err) {
       console.log('[Real Client OCR] Processing live pixels directly in WebAssembly engine...');
-      const cust = inMemorySession.current?.customer;
-      const realDoc = await RealClientOCR.processDocument(file, docType, {
-        fullName: cust?.fullName,
-        dob: cust?.dob
-      });
+      const realDoc = await RealClientOCR.processDocument(file, docType);
 
       if (inMemorySession.current) {
         inMemorySession.current.documents = [realDoc];
@@ -107,6 +103,7 @@ export const kycApi = {
       return realDoc;
     }
   },
+
 
 
 
