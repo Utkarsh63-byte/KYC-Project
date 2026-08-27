@@ -11,7 +11,6 @@ export const SelfieLivenessModal: React.FC<SelfieLivenessModalProps> = ({ onComp
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const timerRef = useRef<any>(null);
 
-
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [stage, setStage] = useState<'POSITION' | 'CALIBRATING' | 'AWAIT_BLINK' | 'CONFIRMING' | 'SUCCESS'>('POSITION');
   const [blinkProgress, setBlinkProgress] = useState<number>(0);
@@ -25,6 +24,7 @@ export const SelfieLivenessModal: React.FC<SelfieLivenessModalProps> = ({ onComp
   const openBaselineRatioRef = useRef<number | null>(null);
   const openBaselineVarRef = useRef<number | null>(null);
   const eyeClosedTimestampRef = useRef<number | null>(null);
+  const closedFrameCountRef = useRef<number>(0);
   const isEyeClosedRef = useRef<boolean>(false);
 
   const startCamera = async () => {
@@ -118,6 +118,7 @@ export const SelfieLivenessModal: React.FC<SelfieLivenessModalProps> = ({ onComp
         setBlinkProgress(0);
         calibrationFramesRef.current = { ratios: [], variances: [] };
         openBaselineRatioRef.current = null;
+        closedFrameCountRef.current = 0;
       }
       return;
     }
@@ -152,33 +153,32 @@ export const SelfieLivenessModal: React.FC<SelfieLivenessModalProps> = ({ onComp
     // PHASE 1: POSITION -> CALIBRATING
     if (stage === 'POSITION') {
       setStage('CALIBRATING');
-      setGuidanceText('Calibrating eye sensor... Hold still with eyes open');
-      setBlinkProgress(15);
+      setGuidanceText('Calibrating eye baseline... Keep eyes open');
+      setBlinkProgress(10);
       return;
     }
 
-    // PHASE 2: CALIBRATING OPEN EYES BASELINE
+    // PHASE 2: CALIBRATING OPEN EYES BASELINE (Requires 20 stable frames ~1.6 seconds)
     if (stage === 'CALIBRATING') {
       const { ratios, variances } = calibrationFramesRef.current;
       ratios.push(currentRatio);
       variances.push(currentEyeStdDev);
-      setBlinkProgress(Math.min(50, 15 + ratios.length * 3));
+      setBlinkProgress(Math.min(50, 10 + ratios.length * 2));
 
-      // Collect 10 stable frames (~800ms) with eyes open
-      if (ratios.length >= 10) {
+      if (ratios.length >= 20) {
         const sortedRatios = [...ratios].sort((a, b) => a - b);
         const sortedVars = [...variances].sort((a, b) => a - b);
         openBaselineRatioRef.current = sortedRatios[Math.floor(sortedRatios.length / 2)];
         openBaselineVarRef.current = sortedVars[Math.floor(sortedVars.length / 2)];
 
         setStage('AWAIT_BLINK');
-        setGuidanceText('Please blink your eyes naturally now');
+        setGuidanceText('Now BLINK your eyes firmly once');
         setBlinkProgress(50);
       }
       return;
     }
 
-    // PHASE 3: AWAIT_BLINK
+    // PHASE 3: AWAIT_BLINK (Requires physical blink with minimum 2 closed frames)
     if (stage === 'AWAIT_BLINK') {
       const baseRatio = openBaselineRatioRef.current || currentRatio;
       const baseVar = openBaselineVarRef.current || currentEyeStdDev;
@@ -188,9 +188,10 @@ export const SelfieLivenessModal: React.FC<SelfieLivenessModalProps> = ({ onComp
       const ratioDrop = (baseRatio - currentRatio) / baseRatio;
       const varDrop = (baseVar - currentEyeStdDev) / baseVar;
 
-      const isClosed = ratioDrop > 0.15 || varDrop > 0.30;
+      const isClosed = ratioDrop > 0.18 || varDrop > 0.32;
 
       if (isClosed) {
+        closedFrameCountRef.current += 1;
         if (!isEyeClosedRef.current) {
           isEyeClosedRef.current = true;
           eyeClosedTimestampRef.current = now;
@@ -200,19 +201,22 @@ export const SelfieLivenessModal: React.FC<SelfieLivenessModalProps> = ({ onComp
       } else {
         if (isEyeClosedRef.current && eyeClosedTimestampRef.current !== null) {
           const duration = now - eyeClosedTimestampRef.current;
+          const closedFrames = closedFrameCountRef.current;
+
           isEyeClosedRef.current = false;
+          closedFrameCountRef.current = 0;
           setEyesClosed(false);
 
-          // Biological human blink duration filter: 100ms - 650ms
-          if (duration >= 100 && duration <= 650) {
+          // Biological human blink duration filter: At least 2 frames and 150ms-650ms
+          if (closedFrames >= 2 && duration >= 150 && duration <= 650) {
             setBlinkProgress(100);
             setStage('CONFIRMING');
-            setGuidanceText('Blink verified! Confirming 3D live presence...');
+            setGuidanceText('Blink verified! Validating 3D live presence...');
             setTimeout(() => {
               captureAndFinish();
             }, 800);
           } else {
-            // Did not match a natural blink duration (e.g. held closed too long or camera glitch)
+            // Jitter / glitch ignored
             setBlinkProgress(50);
           }
         }
