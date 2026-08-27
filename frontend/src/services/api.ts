@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { KYCSessionResult, ReviewCaseItem, AnalyticsSummary, AuditLogItem } from '../types';
+import { RealClientOCR } from './realClientOCR';
+
 
 const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '';
 const API_BASE = `${BASE_URL}/api/v1`;
@@ -91,37 +93,17 @@ export const kycApi = {
       }
       return res.data;
     } catch (err) {
-      console.warn('Using client-side spatial document parsing in Standalone Demo Mode.');
-      const cust = inMemorySession.current?.customer;
-      const isPan = docType.toUpperCase() === 'PAN';
-      
-      const simulatedDoc = {
-        id: 'doc_' + Math.random().toString(36).substring(2, 9),
-        docType: docType,
-        qualityScore: 92.5,
-        tamperScore: 0.0,
-        fields: isPan
-          ? [
-              { fieldName: 'docNumber', value: 'ABCPS1234K', confidence: 98.5, source: 'ocr_pan_roi_number', validationStatus: 'VALID' },
-              { fieldName: 'fullName', value: cust?.fullName?.toUpperCase() || 'UTKARSH PANDEY', confidence: 97.0, source: 'ocr_pan_roi_name', validationStatus: 'VALID' },
-              { fieldName: 'fatherName', value: 'DINESH PANDEY', confidence: 95.0, source: 'ocr_pan_roi_father', validationStatus: 'VALID' },
-              { fieldName: 'dob', value: cust?.dob || '21/12/1990', confidence: 98.0, source: 'ocr_pan_roi_dob', validationStatus: 'VALID' }
-            ]
-          : [
-              { fieldName: 'docNumber', value: '5489 3210 7654', confidence: 99.0, source: 'ocr_aadhaar_roi_uid', validationStatus: 'VALID' },
-              { fieldName: 'fullName', value: cust?.fullName?.toUpperCase() || 'UTKARSH PANDEY', confidence: 97.5, source: 'ocr_aadhaar_roi_name', validationStatus: 'VALID' },
-              { fieldName: 'dob', value: cust?.dob || '21/12/1990', confidence: 98.5, source: 'ocr_aadhaar_roi_dob', validationStatus: 'VALID' },
-              { fieldName: 'gender', value: 'MALE', confidence: 99.0, source: 'ocr_aadhaar_roi_gender', validationStatus: 'VALID' }
-            ]
-      };
+      console.log('[Real Client OCR] Processing live pixels directly in WebAssembly engine...');
+      const realDoc = await RealClientOCR.processDocument(file, docType);
 
       if (inMemorySession.current) {
-        inMemorySession.current.documents = [simulatedDoc];
+        inMemorySession.current.documents = [realDoc];
         inMemorySession.current.status = 'DOCUMENT_PROCESSED';
       }
-      return simulatedDoc;
+      return realDoc;
     }
   },
+
 
   verifyLiveness: async (sessionId: string, selfieBase64: string) => {
     try {
