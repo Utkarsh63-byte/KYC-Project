@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { KYCSessionResult, ReviewCaseItem, AnalyticsSummary } from '../types';
 
-const API_BASE = '/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = `${BASE_URL}/api/v1`;
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -10,6 +11,7 @@ export const api = axios.create({
     'X-Tenant-ID': 'BANK_ABC'
   }
 });
+
 
 export const kycApi = {
   createSession: async (data: { fullName: string; email: string; phone?: string; dob?: string; address?: string }) => {
