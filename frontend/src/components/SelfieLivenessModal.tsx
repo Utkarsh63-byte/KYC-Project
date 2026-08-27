@@ -9,7 +9,8 @@ interface SelfieLivenessModalProps {
 export const SelfieLivenessModal: React.FC<SelfieLivenessModalProps> = ({ onComplete, onClose }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<any>(null);
+
 
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [stage, setStage] = useState<'POSITION' | 'CALIBRATING' | 'AWAIT_BLINK' | 'CONFIRMING' | 'SUCCESS'>('POSITION');
